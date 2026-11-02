@@ -15,26 +15,36 @@ app.get('/', (req, res) => {
 });
 
 
-const client = new MongoClient(process.env.MONGODB_URL);
-export async function connectToMongoDB() {
-  try {
-    await client.connect();
-    console.log("You successfully connected to MongoDB!");
-    return client;
-  } catch (err) {
-    console.dir(err);
+let studiosCollectionPromise;
+
+async function getStudiosCollection() {
+  const mongodbUrl = process.env.MONGODB_URL;
+  if (!mongodbUrl) {
+    throw new Error('MONGODB_URL environment variable is required.');
   }
+
+  if (!studiosCollectionPromise) {
+    const client = new MongoClient(mongodbUrl);
+    studiosCollectionPromise = client.connect()
+      .then(() => client.db('studio_Space').collection('studios'))
+      .catch((error) => {
+        studiosCollectionPromise = undefined;
+        throw error;
+      });
+  }
+
+  return studiosCollectionPromise;
 }
 
-const mongoClient = await connectToMongoDB();
-const db = mongoClient.db("studio_Space");
-const destinationsCollection = db.collection("studios");
-
-
-
 app.get('/studios', async (req, res) => {
-    const result = await destinationsCollection.find({}).toArray();
-    res.send(result);
+    try {
+        const destinationsCollection = await getStudiosCollection();
+        const result = await destinationsCollection.find({}).toArray();
+        return res.json(result);
+    } catch (error) {
+        console.error('Failed to retrieve studio listings:', error);
+        return res.status(500).json({ message: 'Could not retrieve studio listings.' });
+    }
 });
 
 app.post('/studios', async (req, res) => {
@@ -118,6 +128,7 @@ app.post('/studios', async (req, res) => {
     };
 
     try {
+        const destinationsCollection = await getStudiosCollection();
         const result = await destinationsCollection.insertOne(studio);
         return res.status(201).json({
             message: 'Studio created successfully.',
@@ -129,7 +140,10 @@ app.post('/studios', async (req, res) => {
     }
 });
 
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+export default app;
