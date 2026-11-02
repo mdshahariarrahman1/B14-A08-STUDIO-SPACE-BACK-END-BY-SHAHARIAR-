@@ -44,6 +44,7 @@ app.post('/studios', async (req, res) => {
         hourlyRate,
         securityDeposit,
         maxCapacity,
+        rating = 0,
         location,
         imageUrl,
         amenities,
@@ -78,6 +79,10 @@ app.post('/studios', async (req, res) => {
         typeof maxCapacity !== 'number' ||
         !Number.isInteger(maxCapacity) ||
         maxCapacity < 1 ||
+        typeof rating !== 'number' ||
+        !Number.isFinite(rating) ||
+        rating < 0 ||
+        rating > 5 ||
         typeof location !== 'string' ||
         !location.trim() ||
         !validImageUrl(imageUrl) ||
@@ -100,13 +105,13 @@ app.post('/studios', async (req, res) => {
         hourlyRate,
         securityDeposit,
         maxCapacity,
+        rating,
         location: location.trim(),
         imageUrl: imageUrl.trim(),
         amenities: [...new Set(amenities.map((amenity) => amenity.trim()).filter(Boolean))],
         overview: overview.trim(),
         ownerEmail: ownerEmail.trim().toLowerCase(),
         ownerName: ownerName.trim(),
-        rating: 0,
         reviewCount: 0,
         isAvailable: true,
         createdAt: new Date().toISOString(),
