@@ -138,6 +138,19 @@ const editableStudioFields = [
     'overview',
 ];
 
+function getOwnedStudioFilter(id, ownerEmail) {
+    const identifiers = [id];
+    if (/^[a-f\d]{24}$/i.test(id)) {
+        identifiers.push(new ObjectId(id));
+    }
+
+    const escapedEmail = ownerEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return {
+        _id: { $in: identifiers },
+        ownerEmail: { $regex: `^${escapedEmail}$`, $options: 'i' },
+    };
+}
+
 app.get('/studios', async (req, res) => {
     try {
         const destinationsCollection = await getStudiosCollection();
@@ -246,11 +259,8 @@ async function updateStudio(req, res) {
 
     try {
         const studios = await getStudiosCollection();
-        const studioId = new ObjectId(id);
-        const currentStudio = await studios.findOne({
-            _id: studioId,
-            ownerEmail: req.studioOwnerEmail,
-        });
+        const ownedStudioFilter = getOwnedStudioFilter(id, req.studioOwnerEmail);
+        const currentStudio = await studios.findOne(ownedStudioFilter);
 
         if (!currentStudio) {
             return res.status(404).json({ message: 'Studio listing not found.' });
@@ -278,7 +288,7 @@ async function updateStudio(req, res) {
         updatedStudio.updatedAt = new Date().toISOString();
 
         await studios.updateOne(
-            { _id: studioId, ownerEmail: req.studioOwnerEmail },
+            ownedStudioFilter,
             {
                 $set: Object.fromEntries(
                     [...editableStudioFields, 'updatedAt'].map((field) => [
@@ -307,10 +317,9 @@ async function deleteStudio(req, res) {
 
     try {
         const studios = await getStudiosCollection();
-        const result = await studios.deleteOne({
-            _id: new ObjectId(id),
-            ownerEmail: req.studioOwnerEmail,
-        });
+        const result = await studios.deleteOne(
+            getOwnedStudioFilter(id, req.studioOwnerEmail),
+        );
 
         if (result.deletedCount === 0) {
             return res.status(404).json({ message: 'Studio listing not found.' });
