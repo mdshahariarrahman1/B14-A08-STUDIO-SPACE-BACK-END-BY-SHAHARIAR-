@@ -102,6 +102,10 @@ function isValidStudioDetails(studio) {
         typeof studio.hourlyRate === 'number' &&
         Number.isFinite(studio.hourlyRate) &&
         studio.hourlyRate > 0 &&
+        typeof studio.rating === 'number' &&
+        Number.isFinite(studio.rating) &&
+        studio.rating >= 0 &&
+        studio.rating <= 5 &&
         typeof studio.securityDeposit === 'number' &&
         Number.isFinite(studio.securityDeposit) &&
         studio.securityDeposit >= 0 &&
@@ -127,6 +131,7 @@ const editableStudioFields = [
     'hourlyRate',
     'securityDeposit',
     'maxCapacity',
+    'rating',
     'location',
     'imageUrl',
     'amenities',
