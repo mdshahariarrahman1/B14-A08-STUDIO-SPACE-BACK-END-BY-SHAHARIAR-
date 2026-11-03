@@ -17,10 +17,6 @@ const allowedOrigins = new Set(
       .filter(Boolean),
 );
 
-if (process.env.NODE_ENV === 'production' && allowedOrigins.size === 0) {
-  throw new Error('FRONTEND_ORIGINS must contain at least one exact origin in production.');
-}
-
 app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({

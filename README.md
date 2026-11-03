@@ -59,10 +59,11 @@ Create a `.env` file in the root directory:
 ```env
 PORT=5000
 MONGODB_URL=your_mongodb_connection_string
+FRONTEND_ORIGINS=https://your-frontend-domain.com
 BOOKING_API_SECRET=your_shared_secret
 ```
 
-Make sure the MongoDB connection string and shared secret are correctly configured.
+Set `FRONTEND_ORIGINS` to the exact frontend origin(s), separated by commas and without trailing slashes. If it is unset, the API still starts, but browsers will not be allowed to make cross-origin requests; server-to-server requests are unaffected. Make sure the MongoDB connection string and shared secret are correctly configured.
 
 ### 5. Start the Development Server
 
