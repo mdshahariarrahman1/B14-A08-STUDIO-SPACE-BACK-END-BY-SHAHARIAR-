@@ -441,6 +441,12 @@ app.use((req, res) => {
 
 app.use((error, _req, res, _next) => {
     if (res.headersSent) return;
+    console.error('Unhandled backend request error:', {
+        name: error?.name,
+        code: error?.code,
+        status: error?.status,
+        message: error?.message,
+    });
     if (error?.type === 'entity.parse.failed') {
         return res.status(400).json({ error: 'Invalid JSON body.' });
     }
@@ -449,6 +455,9 @@ app.use((error, _req, res, _next) => {
     }
     if (error?.message === 'Origin is not allowed.') {
         return res.status(403).json({ error: 'Origin is not allowed.' });
+    }
+    if (error?.status === 503 && error?.message === 'JWT verification is not configured.') {
+        return res.status(503).json({ error: 'JWT verification is not configured.' });
     }
     return res.status(error?.status === 503 ? 503 : 500).json({ error: 'An unexpected error occurred.' });
 });

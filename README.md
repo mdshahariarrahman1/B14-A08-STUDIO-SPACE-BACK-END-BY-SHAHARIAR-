@@ -61,9 +61,13 @@ PORT=5000
 MONGODB_URL=your_mongodb_connection_string
 FRONTEND_ORIGINS=https://your-frontend-domain.com
 BOOKING_API_SECRET=your_shared_secret
+BETTER_AUTH_URL=https://your-frontend-domain.com
+JWT_ISSUER=https://your-frontend-domain.com
+JWT_AUDIENCE=https://your-frontend-domain.com
+JWKS_URL=https://your-frontend-domain.com/api/auth/jwks
 ```
 
-Set `FRONTEND_ORIGINS` to the exact frontend origin(s), separated by commas and without trailing slashes. If it is unset, the API still starts, but browsers will not be allowed to make cross-origin requests; server-to-server requests are unaffected. Make sure the MongoDB connection string and shared secret are correctly configured.
+Set the auth URLs to the frontend's canonical `BETTER_AUTH_URL` exactly, without a trailing slash. The backend uses `JWKS_URL` to verify the JWTs issued by that frontend. If `JWT_ISSUER` and `BETTER_AUTH_URL` are both omitted, the first origin in `FRONTEND_ORIGINS` is used as the issuer; if that is also unset, the StudioSpace production frontend URL is used. If `JWKS_URL` is omitted, it defaults to `<issuer>/api/auth/jwks`. Set `FRONTEND_ORIGINS` to the exact browser origin(s), separated by commas and without trailing slashes. If it is unset, the API still starts, but browsers will not be allowed to make cross-origin requests; server-to-server requests are unaffected. Make sure the MongoDB connection string and shared secret are correctly configured.
 
 ### 5. Start the Development Server
 

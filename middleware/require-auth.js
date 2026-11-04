@@ -1,11 +1,25 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
 export const AUTH_COOKIE_NAME = "studio_access_token";
+const DEFAULT_AUTH_ISSUER =
+  "https://b14-a08-studio-space-by-shahariar.vercel.app";
 
 let remoteJwks;
 
+function getAuthIssuer() {
+  return (
+    process.env.JWT_ISSUER ||
+    process.env.BETTER_AUTH_URL ||
+    process.env.FRONTEND_ORIGINS?.split(",")[0]?.trim() ||
+    DEFAULT_AUTH_ISSUER
+  );
+}
+
 function getJwks() {
-  const jwksUrl = process.env.JWKS_URL;
+  const issuer = getAuthIssuer();
+  const jwksUrl =
+    process.env.JWKS_URL ||
+    (issuer ? new URL("/api/auth/jwks", issuer).toString() : undefined);
   if (!jwksUrl) {
     const error = new Error("JWT verification is not configured.");
     error.status = 503;
@@ -20,7 +34,7 @@ function getJwks() {
 }
 
 function getJwtVerificationOptions() {
-  const issuer = process.env.JWT_ISSUER || process.env.BETTER_AUTH_URL;
+  const issuer = getAuthIssuer();
   const audience = process.env.JWT_AUDIENCE || issuer;
 
   if (!issuer || !audience) {
