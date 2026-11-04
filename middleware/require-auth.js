@@ -95,6 +95,11 @@ export async function requireAuth(req, res, next) {
     return next();
   } catch (error) {
     if (isJwtVerificationError(error)) {
+      console.warn("Studio service rejected an authentication token:", {
+        code: error.code,
+        claim: error.claim,
+        reason: error.message,
+      });
       return res.status(401).json({ error: "Unauthorized" });
     }
 
