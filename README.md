@@ -106,6 +106,41 @@ BOOKING_API_SECRET=your_shared_secret
 
 ---
 
+## 🔐 Challenge 1: JWT Security with HTTPOnly Cookies
+
+**All server-side mutations are protected with JWT-verified HTTPOnly cookies — unauthorized requests are rejected with `401 Unauthorized`.**
+
+### How it works (end-to-end)
+
+1. **Token issuance (frontend repo):** Better Auth issues a short-lived (15 min) JWT service token after the user's session is validated.
+2. **HTTPOnly cookie (frontend repo):** The token is stored in the `studio_access_token` cookie with `HttpOnly` + `Secure` (in production) flags, so it is never readable by client-side JavaScript and travels only with session-authorized requests.
+3. **Backend verification (this repo):** `middleware/require-auth.js` (`requireAuth`) reads the cookie and verifies the JWT with `jose` against the frontend's remote JWKS — EdDSA only, with `iss`/`aud` and the `sub` + `email` claims enforced. No `Authorization` header is consulted.
+4. **401 rejection (this repo):** Missing, expired, or tampered tokens return `401`, before any route logic or ID validation runs.
+
+### Protected mutations
+
+| Route | Middleware |
+|---|---|
+| `POST /studios` | `mutationLimiter` + `requireAuth` |
+| `PUT/PATCH/DELETE /studios/:id` | `mutationLimiter` + `requireAuth` (+ per-user ownership check, `403` for non-owners) |
+| `POST /bookings` | `mutationLimiter` + `requireAuth` |
+
+`GET /studios` remains intentionally public.
+
+### Verified behavior (local run)
+
+```text
+GET  /studios  (no auth)              -> 200
+POST /studios  (no cookie)            -> 401
+POST /studios  (tampered JWT cookie)  -> 401
+POST /bookings (no cookie)            -> 401
+POST /bookings (tampered JWT cookie)  -> 401
+DELETE /studios/:id (no cookie)       -> 401
+DELETE /studios/:id (tampered JWT)    -> 401
+```
+
+---
+
 ## 👨‍💻 Developer
 
 **Md Shahariar Rahman Shifat**
